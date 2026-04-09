@@ -3,7 +3,7 @@
    ============================================================ */
 
 const Auth = (() => {
-  const SCOPES   = 'email profile https://www.googleapis.com/auth/drive.readonly';
+  const SCOPES   = 'email profile https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/spreadsheets.readonly';
   const USERINFO = 'https://www.googleapis.com/oauth2/v3/userinfo';
   const GIS_URL  = 'https://accounts.google.com/gsi/client';
 

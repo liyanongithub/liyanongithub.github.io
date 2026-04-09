@@ -19,6 +19,7 @@ const Storage = (() => {
     librarianGreeting:   '歡迎回來！今天想讀點什麼？',
     googleClientId:      '',
     googleDriveFolderId: '',
+    googleSheetId:       '',
     readingMode:         'normal',
     lastSyncDate:        null,
     userName:            '',
