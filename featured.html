@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="normal">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Featured Collections — Nordic Digital Library</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/bookshelf.css">
+  <link rel="stylesheet" href="css/themes.css">
+</head>
+<body>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-icon">📚</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="nav-item" title="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="library.html" class="nav-item" title="My Library">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span class="nav-label">My Library</span>
+      </a>
+      <a href="featured.html" class="nav-item active" title="Featured">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span class="nav-label">Featured</span>
+      </a>
+      <a href="authors.html" class="nav-item" title="Authors">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="nav-label">Authors</span>
+      </a>
+      <a href="chat.html" class="nav-item" title="Chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="nav-label">Chat</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html" class="nav-item" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="nav-label">Settings</span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="header">
+      <div style="width:60px"></div>
+      <h1 class="header-title">Nordic Digital Library</h1>
+      <div class="header-actions">
+        <div class="header-avatar" id="userAvatar">R</div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <h2 class="page-title">Featured Collections</h2>
+      <div class="collections-grid" id="collectionsGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="js/storage.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  Utils.initTheme();
+  Storage.initMockData();
+
+  const name = Storage.getSetting('userName') || '';
+  document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase() || '📚';
+
+  function render() {
+    const books   = Storage.getBooks();
+    const records = Storage.getRecords();
+
+    // Build category collections
+    const cats = {};
+    books.forEach(b => {
+      const cat = b.category || '其他';
+      if (!cats[cat]) cats[cat] = [];
+      cats[cat].push(b);
+    });
+
+    const catEmojis = {
+      '文學':'📖', '設計':'✏️', '藝術':'🎨', '攝影':'📷', '歷史':'🏛️',
+      '科學':'🔬', '心靈':'🧘', '自我成長':'🌱', '旅行':'🗺️', '料理':'🍳',
+      '技術':'💻', '心理學':'🧠', '商業':'💼', '其他':'📚',
+    };
+
+    const catGradients = {
+      '文學':'linear-gradient(135deg,#8B5E3C,#C4956A)',
+      '設計':'linear-gradient(135deg,#4A6A9A,#7AAAD0)',
+      '藝術':'linear-gradient(135deg,#C0392B,#E74C3C)',
+      '攝影':'linear-gradient(135deg,#2C3E50,#4A6FA5)',
+      '歷史':'linear-gradient(135deg,#6B4C2A,#A0724A)',
+      '科學':'linear-gradient(135deg,#2D6A4F,#52B788)',
+      '心靈':'linear-gradient(135deg,#7B8D97,#A8C5D6)',
+      '自我成長':'linear-gradient(135deg,#4A8C6B,#74C69D)',
+      '旅行':'linear-gradient(135deg,#D4874A,#E8B08A)',
+      '料理':'linear-gradient(135deg,#C4956A,#DDB48C)',
+      '技術':'linear-gradient(135deg,#2C3E50,#546E7A)',
+      '心理學':'linear-gradient(135deg,#1A3A5C,#3A6A9C)',
+      '商業':'linear-gradient(135deg,#4A3520,#8B5E3C)',
+      '其他':'linear-gradient(135deg,#5A5A5A,#8A8A8A)',
+    };
+
+    // Also add status-based collections
+    const statusCols = [
+      { name:'閱讀中', status:'reading', emoji:'📖', gradient:'linear-gradient(135deg,#2D6A4F,#74C69D)', books: books.filter(b => records[b.id]?.status==='reading') },
+      { name:'已讀完', status:'completed', emoji:'✅', gradient:'linear-gradient(135deg,#6B4C2A,#A0724A)', books: books.filter(b => records[b.id]?.status==='completed') },
+      { name:'想讀的書', status:'want', emoji:'🔖', gradient:'linear-gradient(135deg,#4A5568,#718096)', books: books.filter(b => !records[b.id] || records[b.id]?.status==='want-to-read') },
+      { name:'5星好書', status:'top', emoji:'⭐', gradient:'linear-gradient(135deg,#B7791F,#D4A843)', books: books.filter(b => records[b.id]?.rating === 5) },
+    ];
+
+    const allCollections = [
+      ...statusCols.filter(c => c.books.length > 0),
+      ...Object.entries(cats).map(([cat, catBooks]) => ({
+        name: cat,
+        emoji: catEmojis[cat] || '📚',
+        gradient: catGradients[cat] || 'linear-gradient(135deg,#5A5A5A,#8A8A8A)',
+        books: catBooks,
+        category: cat,
+      })),
+    ];
+
+    document.getElementById('collectionsGrid').innerHTML = allCollections.map(col => `
+      <div class="collection-card" onclick="openCollection('${col.category || col.status}', '${Utils.escHtml(col.name)}')">
+        <div class="collection-cover" style="background:${col.gradient}">
+          <span style="font-size:2.5rem">${col.emoji}</span>
+          <div style="position:absolute;bottom:8px;right:10px;font-size:0.72rem;color:rgba(255,255,255,0.7);font-weight:500">
+            ${col.books.length} 本
+          </div>
+        </div>
+        <div class="collection-info">
+          <div class="collection-name">${Utils.escHtml(col.name)}</div>
+          <div class="collection-count">${col.books.length} 本書</div>
+        </div>
+      </div>`).join('');
+  }
+
+  window.openCollection = function(key, name) {
+    // Navigate to library with filter
+    const params = new URLSearchParams();
+    if (['reading','completed','want','top'].includes(key)) {
+      params.set('status', key);
+    } else {
+      params.set('category', name);
+    }
+    location.href = 'library.html?' + params.toString();
+  };
+
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+/* ============================================================
+   NORDIC DIGITAL LIBRARY — Reading Mode Themes
+   ============================================================ */
+
+/* ── Normal (Default) ────────────────────────────────────── */
+[data-theme="normal"] {
+  --page-bg:        #f5f0e8;
+  --sidebar-bg:     #faf8f4;
+  --sidebar-border: #e8d5b8;
+  --header-bg:      rgba(250, 248, 244, 0.92);
+  --text-dark:      #1e160a;
+  --text-medium:    #4a3520;
+  --text-light:     #8b7355;
+  --text-muted:     #b8a48a;
+  --accent-light:   #f0e6d3;
+  --wall-bg:        #e8d4b0;
+}
+
+/* ── Relaxing (Warm cream, soft serif) ───────────────────── */
+[data-theme="relaxing"] {
+  --page-bg:        #faf4e6;
+  --sidebar-bg:     #fdf8ee;
+  --sidebar-border: #e8d8b0;
+  --header-bg:      rgba(253, 248, 238, 0.93);
+  --text-dark:      #2a1f0a;
+  --text-medium:    #5a4020;
+  --text-light:     #9b8050;
+  --text-muted:     #c0a870;
+  --accent-light:   #f5e8c8;
+  --wall-bg:        #e0c898;
+
+  font-family: var(--font-serif);
+}
+
+[data-theme="relaxing"] body,
+[data-theme="relaxing"] .form-input,
+[data-theme="relaxing"] .form-textarea {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+[data-theme="relaxing"] .library-scene {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 80px,
+      rgba(0,0,0,0.01) 80px,
+      rgba(0,0,0,0.01) 82px
+    ),
+    linear-gradient(
+      180deg,
+      #d4b496 0%,
+      #c9a070 30%,
+      #c09060 60%,
+      #b08858 100%
+    );
+}
+
+/* ── Educational (Cool blue-white, clear) ────────────────── */
+[data-theme="educational"] {
+  --page-bg:        #f0f5fc;
+  --sidebar-bg:     #f7faff;
+  --sidebar-border: #c8d8f0;
+  --header-bg:      rgba(247, 250, 255, 0.93);
+  --text-dark:      #0d1b2e;
+  --text-medium:    #2a4060;
+  --text-light:     #5a7a9a;
+  --text-muted:     #90a8c0;
+  --accent:         #2a5faa;
+  --accent-hover:   #1e4a8a;
+  --accent-light:   #ddeaff;
+  --wall-bg:        #b0c8e8;
+
+  --wood-dark:      #2a4a7a;
+  --wood-medium:    #3a5a8a;
+  --wood-warm:      #4a6a9a;
+  --wood-light:     #5a80b0;
+}
+
+[data-theme="educational"] .library-scene {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 80px,
+      rgba(0,0,0,0.01) 80px,
+      rgba(0,0,0,0.01) 82px
+    ),
+    linear-gradient(
+      180deg,
+      #8ab0d0 0%,
+      #7aa0c0 30%,
+      #8898b8 60%,
+      #7888a8 100%
+    );
+}
+
+[data-theme="educational"] .shelf-board {
+  background: linear-gradient(
+    180deg,
+    #4a6a9a 0%,
+    #2a4a7a 50%,
+    #1a3060 100%
+  );
+}
+
+/* ── Intense (Dark charcoal, high contrast) ──────────────── */
+[data-theme="intense"] {
+  --page-bg:        #1a1420;
+  --sidebar-bg:     #14101a;
+  --sidebar-border: #2a2035;
+  --header-bg:      rgba(20, 16, 26, 0.93);
+  --text-dark:      #f0ecf8;
+  --text-medium:    #c8c0d8;
+  --text-light:     #8878a0;
+  --text-muted:     #4a3860;
+  --accent:         #9060d0;
+  --accent-hover:   #a070e0;
+  --accent-light:   #2a1840;
+  --wall-bg:        #100c18;
+
+  --wood-dark:      #4a2080;
+  --wood-medium:    #6030a0;
+  --wood-warm:      #7040b0;
+  --wood-light:     #8060c0;
+}
+
+[data-theme="intense"] .library-scene {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 80px,
+      rgba(255,255,255,0.01) 80px,
+      rgba(255,255,255,0.01) 82px
+    ),
+    linear-gradient(
+      180deg,
+      #2a1840 0%,
+      #1e1030 30%,
+      #180c28 60%,
+      #100820 100%
+    );
+}
+
+[data-theme="intense"] .shelf-board {
+  background: linear-gradient(
+    180deg,
+    #4a2080 0%,
+    #2a1060 50%,
+    #1a0848 100%
+  );
+}
+
+[data-theme="intense"] .reading-book-stand,
+[data-theme="intense"] .librarian-bubble,
+[data-theme="intense"] .scene-search,
+[data-theme="intense"] .filter-chip,
+[data-theme="intense"] .theme-switcher {
+  background: rgba(40, 28, 65, 0.88);
+  border-color: rgba(100, 70, 160, 0.4);
+  color: var(--text-medium);
+}
+
+/* ── Night (True dark, eye-friendly) ────────────────────── */
+[data-theme="night"] {
+  --page-bg:        #121212;
+  --sidebar-bg:     #0e0e0e;
+  --sidebar-border: #2a2a2a;
+  --header-bg:      rgba(14, 14, 14, 0.95);
+  --text-dark:      #e8e0d8;
+  --text-medium:    #b8b0a8;
+  --text-light:     #787068;
+  --text-muted:     #484048;
+  --accent:         #b8905a;
+  --accent-hover:   #c8a06a;
+  --accent-light:   #2a200e;
+  --wall-bg:        #0a0808;
+
+  --wood-dark:      #403020;
+  --wood-medium:    #604838;
+  --wood-warm:      #805848;
+  --wood-light:     #a07060;
+}
+
+[data-theme="night"] .library-scene {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 80px,
+      rgba(255,255,255,0.005) 80px,
+      rgba(255,255,255,0.005) 82px
+    ),
+    linear-gradient(
+      180deg,
+      #2a1e14 0%,
+      #1e160e 30%,
+      #18100a 60%,
+      #120c06 100%
+    );
+}
+
+[data-theme="night"] .shelf-board {
+  background: linear-gradient(
+    180deg,
+    #604838 0%,
+    #403020 50%,
+    #302010 100%
+  );
+}
+
+[data-theme="night"] .reading-book-stand,
+[data-theme="night"] .librarian-bubble,
+[data-theme="night"] .scene-search,
+[data-theme="night"] .filter-chip,
+[data-theme="night"] .theme-switcher {
+  background: rgba(26, 18, 10, 0.88);
+  border-color: rgba(100, 75, 50, 0.4);
+  color: var(--text-medium);
+}
+
+/* ── Smooth theme transitions ────────────────────────────── */
+body,
+.sidebar,
+.header,
+.library-scene,
+.shelf-board,
+.reading-book-stand,
+.librarian-bubble,
+.page-content,
+.form-input,
+.form-textarea {
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease,
+    border-color 0.4s ease;
+}

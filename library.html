@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="normal">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Library — Nordic Digital Library</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/bookshelf.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <style>
+    .library-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .library-toolbar .search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--sidebar-border);
+      border-radius: 20px;
+      padding: 7px 14px;
+      background: var(--sidebar-bg);
+      flex: 1;
+      max-width: 360px;
+    }
+
+    .library-toolbar .search-wrap input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 0.85rem;
+      width: 100%;
+      color: var(--text-dark);
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .filter-pill {
+      padding: 6px 14px;
+      border-radius: 18px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: var(--sidebar-bg);
+      border: 1px solid var(--sidebar-border);
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-pill:hover { border-color: var(--wood-light); color: var(--text-medium); }
+    .filter-pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .sort-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: var(--text-light);
+    }
+
+    .sort-wrap select {
+      border: 1px solid var(--sidebar-border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      background: var(--sidebar-bg);
+      color: var(--text-medium);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .view-toggle {
+      display: flex;
+      border: 1px solid var(--sidebar-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .view-btn {
+      padding: 6px 10px;
+      background: var(--sidebar-bg);
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .view-btn.active { background: var(--accent); color: #fff; }
+
+    .results-count {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .library-list { display: none; }
+    .library-list.active { display: flex; flex-direction: column; gap: 10px; }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      background: var(--sidebar-bg);
+      border: 1px solid var(--sidebar-border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .list-item:hover { border-color: var(--wood-light); background: var(--accent-light); }
+
+    .list-cover {
+      width: 40px;
+      height: 56px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .list-info { flex: 1; min-width: 0; }
+    .list-title { font-size: 0.92rem; font-weight: 500; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .list-author { font-size: 0.75rem; color: var(--text-light); font-style: italic; }
+    .list-meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+
+    .add-book-btn {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(107,76,42,0.35);
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      z-index: 50;
+    }
+
+    .add-book-btn:hover { background: var(--wood-dark); transform: scale(1.08); }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-icon">📚</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="nav-item" title="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="library.html" class="nav-item active" title="My Library">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span class="nav-label">My Library</span>
+      </a>
+      <a href="featured.html" class="nav-item" title="Featured">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span class="nav-label">Featured</span>
+      </a>
+      <a href="authors.html" class="nav-item" title="Authors">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="nav-label">Authors</span>
+      </a>
+      <a href="chat.html" class="nav-item" title="Chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="nav-label">Chat</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html" class="nav-item" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="nav-label">Settings</span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="header">
+      <div style="width:60px"></div>
+      <h1 class="header-title">Nordic Digital Library</h1>
+      <div class="header-actions">
+        <div class="header-avatar" id="userAvatar">R</div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="library-grid-header">
+        <h2 class="page-title" style="margin-bottom:0">My Library</h2>
+        <button class="btn btn-secondary" onclick="location.href='settings.html#sync'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.73"/></svg>
+          同步 Google Drive
+        </button>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="library-toolbar">
+        <label class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchInput" placeholder="搜尋書名、作者…" autocomplete="off">
+        </label>
+
+        <div class="filter-group" id="categoryFilters">
+          <!-- injected by JS -->
+        </div>
+
+        <div class="sort-wrap">
+          排序
+          <select id="sortSelect">
+            <option value="date-added">加入時間</option>
+            <option value="title">書名 A-Z</option>
+            <option value="author">作者</option>
+            <option value="rating">評分</option>
+            <option value="progress">進度</option>
+          </select>
+          <div class="view-toggle">
+            <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')" title="Grid">⊞</button>
+            <button class="view-btn" id="listViewBtn" onclick="setView('list')" title="List">☰</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status filters -->
+      <div style="display:flex;gap:7px;margin-bottom:20px;flex-wrap:wrap" id="statusFilters">
+        <div class="filter-pill active" data-status="all" onclick="setStatus('all')">全部</div>
+        <div class="filter-pill" data-status="reading"      onclick="setStatus('reading')">📖 閱讀中</div>
+        <div class="filter-pill" data-status="completed"   onclick="setStatus('completed')">✅ 已讀</div>
+        <div class="filter-pill" data-status="want-to-read" onclick="setStatus('want-to-read')">🔖 想讀</div>
+      </div>
+
+      <div class="results-count" id="resultsCount"></div>
+
+      <!-- Grid view -->
+      <div class="library-grid" id="gridView"></div>
+
+      <!-- List view -->
+      <div class="library-list" id="listView"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Book Modal -->
+<div class="modal-overlay" id="addModal" onclick="closeAddModal(event)">
+  <div class="modal">
+    <h2 class="modal-title">手動新增書本</h2>
+    <div class="form-group">
+      <label class="form-label">書名 *</label>
+      <input type="text" id="newTitle" class="form-input" placeholder="請輸入書名">
+    </div>
+    <div class="form-group">
+      <label class="form-label">作者</label>
+      <input type="text" id="newAuthor" class="form-input" placeholder="作者姓名">
+    </div>
+    <div class="form-group">
+      <label class="form-label">分類</label>
+      <input type="text" id="newCategory" class="form-input" placeholder="文學、設計、科技…">
+    </div>
+    <div class="form-group">
+      <label class="form-label">封面圖片 URL</label>
+      <input type="url" id="newCoverUrl" class="form-input" placeholder="https://...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">簡介</label>
+      <textarea id="newDescription" class="form-textarea" rows="3" placeholder="書本簡介…"></textarea>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">出版年份</label>
+        <input type="text" id="newPublishDate" class="form-input" placeholder="2023">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">頁數</label>
+        <input type="number" id="newPageCount" class="form-input" placeholder="300">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px">
+      <button onclick="closeAddModal()" class="btn btn-secondary">取消</button>
+      <button onclick="addBook()" class="btn btn-primary">新增書本</button>
+    </div>
+  </div>
+</div>
+
+<button class="add-book-btn" onclick="document.getElementById('addModal').classList.add('open')" title="新增書本">+</button>
+
+<div id="toast"></div>
+
+<script src="js/storage.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  Utils.initTheme();
+  Storage.initMockData();
+
+  let viewMode = 'grid';
+  let filters  = { query:'', category:'all', status:'all', sort:'date-added' };
+
+  const name = Storage.getSetting('userName') || '';
+  document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase() || '📚';
+
+  // Render
+  function render() {
+    const books   = Storage.getBooks();
+    const records = Storage.getRecords();
+    const filtered = Utils.filterBooks(books, records, {
+      query:    filters.query    || null,
+      category: filters.category !== 'all' ? filters.category : null,
+      status:   filters.status   !== 'all' ? filters.status   : null,
+      sort:     filters.sort,
+    });
+
+    document.getElementById('resultsCount').textContent =
+      `${filtered.length} 本書${filtered.length !== books.length ? `（共 ${books.length} 本）` : ''}`;
+
+    // Category filters
+    const cats = Utils.getCategories(books).filter(c => c !== 'all');
+    document.getElementById('categoryFilters').innerHTML = cats.map(c => `
+      <div class="filter-pill ${filters.category===c?'active':''}"
+           onclick="setCategory('${c}')">${c}</div>
+    `).join('');
+
+    // Grid view
+    document.getElementById('gridView').innerHTML = filtered.length === 0
+      ? `<p style="color:var(--text-muted);font-style:italic;grid-column:1/-1;text-align:center;padding:40px">找不到相符的書</p>`
+      : filtered.map(b => Utils.renderLibraryCard(b, records[b.id])).join('');
+
+    // List view
+    document.getElementById('listView').innerHTML = filtered.length === 0
+      ? `<p style="color:var(--text-muted);font-style:italic;text-align:center;padding:40px">找不到相符的書</p>`
+      : filtered.map(book => {
+          const rec   = records[book.id] || {};
+          const color = book.coverColor || Utils.generateColor(book.id);
+          const stars = rec.rating ? '★'.repeat(rec.rating) : '';
+          return `
+            <div class="list-item" onclick="location.href='book.html?id=${encodeURIComponent(book.id)}'">
+              <div class="list-cover">
+                ${book.coverUrl
+                  ? `<img src="${Utils.escHtml(book.coverUrl)}" style="width:100%;height:100%;object-fit:cover;">`
+                  : `<div style="width:100%;height:100%;background:${color};display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,0.8);padding:3px;text-align:center;font-weight:600;line-height:1.2">${Utils.escHtml(book.title)}</div>`}
+              </div>
+              <div class="list-info">
+                <div class="list-title">${Utils.escHtml(book.title)}</div>
+                <div class="list-author">${Utils.escHtml(book.author||'')}</div>
+                <div class="list-meta">
+                  <span class="status-badge ${rec.status||'want-to-read'}">${Utils.statusText(rec.status)}</span>
+                  ${stars ? `<span style="color:#d4a843;font-size:0.75rem">${stars}</span>` : ''}
+                  ${(rec.progress||0) > 0 && (rec.progress||0) < 100 ? `<span style="font-size:0.72rem;color:var(--text-muted)">${rec.progress}%</span>` : ''}
+                </div>
+              </div>
+              ${book.category ? `<span style="font-size:0.7rem;color:var(--text-muted);white-space:nowrap">${Utils.escHtml(book.category)}</span>` : ''}
+            </div>`;
+        }).join('');
+  }
+
+  function setView(mode) {
+    viewMode = mode;
+    document.getElementById('gridView').style.display  = mode === 'grid' ? '' : 'none';
+    document.getElementById('listView').classList.toggle('active', mode === 'list');
+    document.getElementById('gridViewBtn').classList.toggle('active', mode === 'grid');
+    document.getElementById('listViewBtn').classList.toggle('active', mode === 'list');
+  }
+
+  function setCategory(cat) {
+    filters.category = filters.category === cat ? 'all' : cat;
+    render();
+  }
+
+  window.setStatus = function(status) {
+    filters.status = status;
+    document.querySelectorAll('#statusFilters .filter-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.status === status);
+    });
+    render();
+  };
+
+  // Search
+  document.getElementById('searchInput').addEventListener('input', Utils.debounce(function() {
+    filters.query = this.value;
+    render();
+  }, 250));
+
+  // Sort
+  document.getElementById('sortSelect').addEventListener('change', function() {
+    filters.sort = this.value;
+    render();
+  });
+
+  // Add book
+  window.closeAddModal = function(e) {
+    if (!e || e.target === document.getElementById('addModal')) {
+      document.getElementById('addModal').classList.remove('open');
+    }
+  };
+
+  window.addBook = function() {
+    const title = document.getElementById('newTitle').value.trim();
+    if (!title) { Utils.showToast('請填入書名'); return; }
+
+    const book = {
+      id:          'manual-' + Date.now(),
+      title,
+      author:      document.getElementById('newAuthor').value.trim(),
+      category:    document.getElementById('newCategory').value.trim(),
+      coverUrl:    document.getElementById('newCoverUrl').value.trim(),
+      description: document.getElementById('newDescription').value.trim(),
+      publishDate: document.getElementById('newPublishDate').value.trim(),
+      pageCount:   parseInt(document.getElementById('newPageCount').value) || null,
+      addedDate:   new Date().toISOString().split('T')[0],
+      driveFileId: '', driveViewUrl: '', coverColor: '',
+    };
+
+    Storage.addBook(book);
+    closeAddModal();
+    render();
+    Utils.showToast(`《${title}》已加入圖書館 ✓`);
+
+    // Clear form
+    ['newTitle','newAuthor','newCategory','newCoverUrl','newDescription','newPublishDate','newPageCount']
+      .forEach(id => document.getElementById(id).value = '');
+  };
+
+  render();
+</script>
+</body>
+</html>

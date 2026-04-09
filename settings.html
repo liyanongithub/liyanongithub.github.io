@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="normal">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — Nordic Digital Library</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/bookshelf.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <style>
+    .settings-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 32px;
+      max-width: 900px;
+    }
+
+    .settings-nav {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+    }
+
+    .settings-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 3px;
+    }
+
+    .settings-nav-item:hover { background: var(--accent-light); color: var(--accent); }
+    .settings-nav-item.active { background: var(--accent-light); color: var(--accent); }
+
+    .settings-section {
+      background: var(--sidebar-bg);
+      border: 1px solid var(--sidebar-border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .settings-section h3 {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--text-dark);
+      margin-bottom: 6px;
+    }
+
+    .settings-section p.desc {
+      font-size: 0.78rem;
+      color: var(--text-light);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .password-wrap {
+      position: relative;
+    }
+
+    .password-wrap input { padding-right: 44px; }
+
+    .show-pwd-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-light);
+      padding: 2px;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .status-dot.green { background: var(--status-reading); }
+    .status-dot.red   { background: #b44c3c; }
+    .status-dot.gray  { background: var(--text-muted); }
+
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    .theme-option {
+      cursor: pointer;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .theme-option.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(176,125,78,0.15);
+    }
+
+    .theme-preview {
+      height: 60px;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      gap: 4px;
+    }
+
+    .theme-preview .bar { height: 4px; border-radius: 2px; opacity: 0.6; }
+    .theme-preview .bar.wide { width: 80%; }
+    .theme-preview .bar.narrow { width: 50%; }
+
+    .theme-label {
+      padding: 6px 8px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-align: center;
+      background: var(--sidebar-bg);
+      color: var(--text-medium);
+    }
+
+    .sync-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--accent-light);
+      border-radius: 8px;
+      font-size: 0.82rem;
+      color: var(--text-medium);
+      margin-bottom: 16px;
+    }
+
+    .danger-zone {
+      border-color: rgba(180,76,60,0.3);
+      background: rgba(180,76,60,0.04);
+    }
+
+    .danger-btn {
+      background: rgba(180,76,60,0.1);
+      color: #b44c3c;
+      border: 1px solid rgba(180,76,60,0.3);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .danger-btn:hover { background: rgba(180,76,60,0.15); }
+
+    .info-box {
+      background: rgba(176,125,78,0.08);
+      border: 1px solid rgba(176,125,78,0.2);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.78rem;
+      color: var(--text-medium);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .info-box a { color: var(--accent); }
+
+    @media (max-width: 700px) {
+      .settings-layout { grid-template-columns: 1fr; }
+      .settings-nav    { position: static; display: none; }
+      .theme-grid      { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-icon">📚</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="nav-item" title="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="library.html" class="nav-item" title="My Library">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span class="nav-label">My Library</span>
+      </a>
+      <a href="featured.html" class="nav-item" title="Featured">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span class="nav-label">Featured</span>
+      </a>
+      <a href="authors.html" class="nav-item" title="Authors">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="nav-label">Authors</span>
+      </a>
+      <a href="chat.html" class="nav-item" title="Chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="nav-label">Chat</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html" class="nav-item active" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="nav-label">Settings</span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="header">
+      <div style="width:60px"></div>
+      <h1 class="header-title">Nordic Digital Library</h1>
+      <div class="header-actions">
+        <div class="header-avatar" id="userAvatar">R</div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <h2 class="page-title">Settings</h2>
+
+      <div class="settings-layout">
+        <!-- Settings Nav -->
+        <div class="settings-nav">
+          <div class="settings-nav-item active" onclick="scrollTo('profile')">👤 個人資料</div>
+          <div class="settings-nav-item" onclick="scrollTo('openai')">🤖 AI 圖書館員</div>
+          <div class="settings-nav-item" onclick="scrollTo('gdrive')">☁️ Google Drive</div>
+          <div class="settings-nav-item" onclick="scrollTo('appearance')">🎨 外觀主題</div>
+          <div class="settings-nav-item" onclick="scrollTo('data')">💾 資料管理</div>
+        </div>
+
+        <!-- Settings Panels -->
+        <div>
+
+          <!-- Profile -->
+          <div class="settings-section" id="profile">
+            <h3>個人資料</h3>
+            <p class="desc">設定您的姓名，這會顯示在頭像和聊天室中。</p>
+            <div class="form-group">
+              <label class="form-label">您的名字</label>
+              <input type="text" id="userName" class="form-input" placeholder="請輸入名字">
+            </div>
+            <button class="btn btn-primary" onclick="saveProfile()">儲存</button>
+          </div>
+
+          <!-- OpenAI -->
+          <div class="settings-section" id="openai">
+            <h3>AI 圖書館員</h3>
+            <p class="desc">設定 OpenAI API Key 以啟用 AI 圖書館員聊天功能。您的 Key 僅儲存在本機瀏覽器中，不會上傳至任何伺服器。</p>
+
+            <div class="info-box">
+              💡 前往 <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com</a> 取得您的 API Key。建議使用 <strong>gpt-4o-mini</strong> 模型，兼顧效能與成本。
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">OpenAI API Key</label>
+              <div class="password-wrap">
+                <input type="password" id="openaiKey" class="form-input" placeholder="sk-...">
+                <button class="show-pwd-btn" onclick="togglePwd('openaiKey', this)">👁</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">模型</label>
+              <select id="openaiModel" class="form-input">
+                <option value="gpt-4o-mini">gpt-4o-mini（推薦，快速且便宜）</option>
+                <option value="gpt-4o">gpt-4o（更強大）</option>
+                <option value="gpt-3.5-turbo">gpt-3.5-turbo（便宜）</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">圖書館員名字</label>
+              <input type="text" id="librarianName" class="form-input" placeholder="小書">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">歡迎語</label>
+              <input type="text" id="librarianGreeting" class="form-input" placeholder="今天想讀點什麼？">
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:center">
+              <button class="btn btn-primary" onclick="saveOpenAI()">儲存</button>
+              <button class="btn btn-secondary" onclick="testOpenAI()">測試連線</button>
+              <span id="openaiStatus" style="font-size:0.78rem;color:var(--text-light)"></span>
+            </div>
+          </div>
+
+          <!-- Google Drive -->
+          <div class="settings-section" id="gdrive">
+            <h3>Google Drive 同步</h3>
+            <p class="desc">連接您的 Google Drive，自動匯入儲存的書本檔案。</p>
+
+            <div class="info-box">
+              💡 需要在 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a> 建立 OAuth2 Client ID，並將 <code style="background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px">https://liyanongithub.github.io</code> 加入授權來源。
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Google OAuth2 Client ID</label>
+              <input type="text" id="googleClientId" class="form-input" placeholder="xxx.apps.googleusercontent.com">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Google Drive 資料夾 ID <span style="color:var(--text-muted);font-weight:400">（選填，留空則搜尋所有 PDF/epub）</span></label>
+              <input type="text" id="googleFolderId" class="form-input" placeholder="資料夾 ID（從 Drive URL 取得）">
+            </div>
+
+            <div id="syncStatus" style="display:none" class="sync-status">
+              <span id="syncStatusText"></span>
+            </div>
+
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="saveGDrive()">儲存設定</button>
+              <button class="btn btn-secondary" id="syncBtn" onclick="syncDrive()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.73"/></svg>
+                立即同步
+              </button>
+            </div>
+          </div>
+
+          <!-- Appearance -->
+          <div class="settings-section" id="appearance">
+            <h3>閱讀模式 / 主題</h3>
+            <p class="desc">選擇符合您當前心情的閱讀環境。</p>
+
+            <div class="theme-grid">
+              ${[
+                { id:'normal',      label:'標準',   bg:'#f5f0e8', bar1:'#8b5e3c', bar2:'#4a3520' },
+                { id:'relaxing',    label:'放鬆',   bg:'#faf4e6', bar1:'#c4956a', bar2:'#8b7355' },
+                { id:'educational', label:'學習',   bg:'#f0f5fc', bar1:'#3a5a8a', bar2:'#2a4060' },
+                { id:'intense',     label:'專注',   bg:'#1a1420', bar1:'#6030a0', bar2:'#4a2080' },
+                { id:'night',       label:'夜間',   bg:'#121212', bar1:'#805848', bar2:'#604838' },
+              ].map(t => `
+                <div class="theme-option" data-theme="${t.id}" onclick="pickTheme('${t.id}')">
+                  <div class="theme-preview" style="background:${t.bg}">
+                    <div class="bar wide"   style="background:${t.bar1}"></div>
+                    <div class="bar narrow" style="background:${t.bar2}"></div>
+                    <div class="bar wide"   style="background:${t.bar1}"></div>
+                  </div>
+                  <div class="theme-label">${t.label}</div>
+                </div>`).join('')}
+            </div>
+          </div>
+
+          <!-- Data -->
+          <div class="settings-section" id="data">
+            <h3>資料管理</h3>
+            <p class="desc">匯出或匯入您的圖書館資料（不含 API keys）。</p>
+
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
+              <button class="btn btn-secondary" onclick="exportData()">
+                📤 匯出書單 JSON
+              </button>
+              <label class="btn btn-secondary" style="cursor:pointer">
+                📥 匯入書單 JSON
+                <input type="file" accept=".json" style="display:none" onchange="importData(this)">
+              </label>
+            </div>
+
+            <div class="settings-section danger-zone" style="margin-bottom:0">
+              <h3 style="color:#b44c3c">危險操作</h3>
+              <p class="desc" style="margin-bottom:12px">以下操作無法復原，請謹慎使用。</p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="danger-btn" onclick="clearChat()">清空對話記錄</button>
+                <button class="danger-btn" onclick="clearAll()">清除所有資料</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="js/storage.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/gdrive.js"></script>
+<script>
+  Utils.initTheme();
+
+  // Load saved values
+  const s = Storage.getSettings();
+  document.getElementById('userName').value           = s.userName || '';
+  document.getElementById('openaiKey').value          = s.openaiApiKey || '';
+  document.getElementById('openaiModel').value        = s.openaiModel || 'gpt-4o-mini';
+  document.getElementById('librarianName').value      = s.librarianName || '小書';
+  document.getElementById('librarianGreeting').value  = s.librarianGreeting || '今天想讀點什麼？';
+  document.getElementById('googleClientId').value     = s.googleClientId || '';
+  document.getElementById('googleFolderId').value     = s.googleDriveFolderId || '';
+
+  const name = s.userName || '';
+  document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase() || '📚';
+
+  // Apply theme selection
+  const currentTheme = s.readingMode || 'normal';
+  document.querySelectorAll('.theme-option').forEach(el => {
+    el.classList.toggle('selected', el.dataset.theme === currentTheme);
+  });
+
+  // Helpers
+  function scrollTo(id) {
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function togglePwd(inputId, btn) {
+    const input = document.getElementById(inputId);
+    input.type = input.type === 'password' ? 'text' : 'password';
+    btn.textContent = input.type === 'password' ? '👁' : '🙈';
+  }
+
+  // Save functions
+  window.saveProfile = function() {
+    Storage.setSetting('userName', document.getElementById('userName').value.trim());
+    Utils.showToast('個人資料已儲存 ✓');
+    document.getElementById('userAvatar').textContent =
+      (document.getElementById('userName').value.trim().charAt(0) || '📚').toUpperCase();
+  };
+
+  window.saveOpenAI = function() {
+    Storage.setSetting('openaiApiKey',      document.getElementById('openaiKey').value.trim());
+    Storage.setSetting('openaiModel',       document.getElementById('openaiModel').value);
+    Storage.setSetting('librarianName',     document.getElementById('librarianName').value.trim() || '小書');
+    Storage.setSetting('librarianGreeting', document.getElementById('librarianGreeting').value.trim());
+    Utils.showToast('OpenAI 設定已儲存 ✓');
+  };
+
+  window.testOpenAI = async function() {
+    const key = document.getElementById('openaiKey').value.trim();
+    if (!key) { Utils.showToast('請先填入 API Key'); return; }
+    const statusEl = document.getElementById('openaiStatus');
+    statusEl.textContent = '測試中…';
+
+    try {
+      const resp = await fetch('https://api.openai.com/v1/models', {
+        headers: { Authorization: `Bearer ${key}` }
+      });
+      if (resp.ok) {
+        statusEl.innerHTML = '<span style="color:var(--status-reading)">✓ 連線成功</span>';
+      } else {
+        statusEl.innerHTML = `<span style="color:#b44c3c">✗ 錯誤 ${resp.status}</span>`;
+      }
+    } catch {
+      statusEl.innerHTML = `<span style="color:#b44c3c">✗ 無法連線</span>`;
+    }
+    setTimeout(() => statusEl.textContent = '', 4000);
+  };
+
+  window.saveGDrive = function() {
+    Storage.setSetting('googleClientId',      document.getElementById('googleClientId').value.trim());
+    Storage.setSetting('googleDriveFolderId', document.getElementById('googleFolderId').value.trim());
+    Utils.showToast('Google Drive 設定已儲存 ✓');
+  };
+
+  window.syncDrive = async function() {
+    const clientId = document.getElementById('googleClientId').value.trim();
+    if (!clientId) { Utils.showToast('請先填入 Google Client ID'); return; }
+
+    // Ensure GIS loaded
+    if (!window.google?.accounts?.oauth2) {
+      Utils.showToast('正在載入 Google 服務…');
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      document.head.appendChild(script);
+      await new Promise(r => script.onload = r);
+    }
+
+    const syncBtn = document.getElementById('syncBtn');
+    const statusEl = document.getElementById('syncStatus');
+    const statusTextEl = document.getElementById('syncStatusText');
+
+    try {
+      syncBtn.disabled = true;
+      statusEl.style.display = 'flex';
+      statusTextEl.textContent = '正在連接 Google Drive…';
+
+      await GDrive.init(clientId);
+      await GDrive.requestToken();
+
+      statusTextEl.textContent = '正在同步書本…';
+
+      const folderId = document.getElementById('googleFolderId').value.trim();
+      const result = await GDrive.syncBooks(folderId, (cur, total, name) => {
+        statusTextEl.textContent = `同步中 (${cur}/${total})：${name}`;
+      });
+
+      statusEl.style.background = 'rgba(74,140,107,0.1)';
+      statusTextEl.innerHTML =
+        `✓ 同步完成！新增 ${result.added.length} 本，更新 ${result.updated.length} 本`;
+      Utils.showToast(`同步完成：${result.added.length} 本新書 ✓`);
+    } catch (err) {
+      statusEl.style.background = 'rgba(180,76,60,0.1)';
+      statusTextEl.textContent = `同步失敗：${err.message || err}`;
+    } finally {
+      syncBtn.disabled = false;
+    }
+  };
+
+  window.pickTheme = function(theme) {
+    Utils.applyTheme(theme);
+    document.querySelectorAll('.theme-option').forEach(el => {
+      el.classList.toggle('selected', el.dataset.theme === theme);
+    });
+    Utils.showToast('主題已切換');
+  };
+
+  // Data management
+  window.exportData = function() {
+    const data = Storage.exportData();
+    const blob = new Blob([data], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `nordic-library-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    Utils.showToast('書單已匯出 ✓');
+  };
+
+  window.importData = function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        Storage.importData(e.target.result);
+        Utils.showToast('書單已匯入 ✓');
+        input.value = '';
+      } catch {
+        Utils.showToast('匯入失敗：檔案格式錯誤');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  window.clearChat = function() {
+    if (!confirm('確定要清空所有對話記錄嗎？')) return;
+    Storage.clearChatHistory();
+    Utils.showToast('對話記錄已清空');
+  };
+
+  window.clearAll = function() {
+    if (!confirm('確定要清除所有資料嗎？（書單、心得、設定都會刪除，此操作無法復原！）')) return;
+    Storage.clearAllData();
+    Utils.showToast('所有資料已清除');
+    setTimeout(() => location.reload(), 1000);
+  };
+
+  // Last sync time
+  const lastSync = s.lastSyncDate;
+  if (lastSync) {
+    document.getElementById('syncStatus').style.display = 'flex';
+    document.getElementById('syncStatusText').textContent =
+      `上次同步：${Utils.formatDate(lastSync.split('T')[0])}`;
+  }
+</script>
+</body>
+</html>

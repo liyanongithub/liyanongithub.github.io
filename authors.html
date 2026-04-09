@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="normal">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authors — Nordic Digital Library</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/bookshelf.css">
+  <link rel="stylesheet" href="css/themes.css">
+</head>
+<body>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-icon">📚</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="nav-item" title="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="library.html" class="nav-item" title="My Library">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span class="nav-label">My Library</span>
+      </a>
+      <a href="featured.html" class="nav-item" title="Featured">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span class="nav-label">Featured</span>
+      </a>
+      <a href="authors.html" class="nav-item active" title="Authors">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="nav-label">Authors</span>
+      </a>
+      <a href="chat.html" class="nav-item" title="Chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="nav-label">Chat</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html" class="nav-item" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="nav-label">Settings</span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="header">
+      <div style="width:60px"></div>
+      <h1 class="header-title">Nordic Digital Library</h1>
+      <div class="header-actions">
+        <div class="header-avatar" id="userAvatar">R</div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <h2 class="page-title">Authors</h2>
+
+      <!-- Selected author view -->
+      <div id="authorDetail" style="display:none;margin-bottom:32px">
+        <button onclick="closeAuthor()" class="btn btn-ghost" style="margin-bottom:16px">
+          ← 回到作者列表
+        </button>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+          <div class="author-avatar" id="detailAvatar" style="width:56px;height:56px;font-size:1.4rem"></div>
+          <div>
+            <h3 id="detailAuthorName" style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400"></h3>
+            <p id="detailAuthorCount" style="font-size:0.8rem;color:var(--text-light)"></p>
+          </div>
+        </div>
+        <div class="library-grid" id="authorBooks"></div>
+      </div>
+
+      <!-- Authors grid -->
+      <div id="authorsView">
+        <div style="margin-bottom:20px">
+          <label style="display:flex;align-items:center;gap:8px;border:1px solid var(--sidebar-border);border-radius:20px;padding:8px 14px;max-width:300px;background:var(--sidebar-bg)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="authorSearch" placeholder="搜尋作者…"
+              style="border:none;background:transparent;outline:none;font-size:0.85rem;width:100%;color:var(--text-dark)">
+          </label>
+        </div>
+        <div class="author-grid" id="authorGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="js/storage.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  Utils.initTheme();
+  Storage.initMockData();
+
+  const name = Storage.getSetting('userName') || '';
+  document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase() || '📚';
+
+  let allAuthors = [];
+
+  function render(query = '') {
+    const books   = Storage.getBooks();
+    const records = Storage.getRecords();
+
+    // Group by author
+    const authorMap = {};
+    books.forEach(b => {
+      const author = b.author?.trim() || '未知作者';
+      if (!authorMap[author]) authorMap[author] = [];
+      authorMap[author].push(b);
+    });
+
+    allAuthors = Object.entries(authorMap)
+      .sort((a, b) => b[1].length - a[1].length);
+
+    const filtered = query
+      ? allAuthors.filter(([a]) => a.toLowerCase().includes(query.toLowerCase()))
+      : allAuthors;
+
+    document.getElementById('authorGrid').innerHTML = filtered.map(([author, bks]) => {
+      const initial = author.charAt(0).toUpperCase();
+      const color   = Utils.generateColor(author);
+      const avgRating = bks.reduce((sum, b) => {
+        const r = records[b.id]?.rating || 0;
+        return sum + r;
+      }, 0) / bks.filter(b => records[b.id]?.rating).length || 0;
+
+      return `
+        <div class="author-card" onclick="openAuthor('${Utils.escHtml(author)}')">
+          <div class="author-avatar" style="background:${color}">${initial}</div>
+          <div class="author-name">${Utils.escHtml(author)}</div>
+          <div class="author-count">${bks.length} 本書${avgRating ? ` · ⭐ ${avgRating.toFixed(1)}` : ''}</div>
+        </div>`;
+    }).join('');
+
+    if (filtered.length === 0) {
+      document.getElementById('authorGrid').innerHTML =
+        '<p style="color:var(--text-muted);font-style:italic">找不到相符的作者</p>';
+    }
+  }
+
+  window.openAuthor = function(author) {
+    const books   = Storage.getBooks().filter(b => (b.author?.trim()||'未知作者') === author);
+    const records = Storage.getRecords();
+    const color   = Utils.generateColor(author);
+
+    document.getElementById('authorsView').style.display = 'none';
+    document.getElementById('authorDetail').style.display = 'block';
+    document.getElementById('detailAvatar').textContent = author.charAt(0).toUpperCase();
+    document.getElementById('detailAvatar').style.background = color;
+    document.getElementById('detailAuthorName').textContent = author;
+    document.getElementById('detailAuthorCount').textContent = `${books.length} 本藏書`;
+    document.getElementById('authorBooks').innerHTML = books.map(b => Utils.renderLibraryCard(b, records[b.id])).join('');
+  };
+
+  window.closeAuthor = function() {
+    document.getElementById('authorDetail').style.display = 'none';
+    document.getElementById('authorsView').style.display  = 'block';
+  };
+
+  document.getElementById('authorSearch').addEventListener('input', Utils.debounce(function() {
+    render(this.value);
+  }, 250));
+
+  render();
+</script>
+</body>
+</html>

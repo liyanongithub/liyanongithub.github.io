@@ -1,43 +1,671 @@
-<!-- TradingView Widget BEGIN -->
-<div class="tradingview-widget-container">
-  <div class="tradingview-widget-container__widget"></div>
-  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com" rel="noopener" target="_blank"><span class="blue-text">Quotes</span></a> by TradingView</div>
-  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-tickers.js" async>
-  {
-  "symbols": [
-    {
-      "proName": "FOREXCOM:SPXUSD",
-      "title": "S&P 500"
-    },
-    {
-      "description": "TWD / USD",
-      "proName": "FX_IDC:USDTWD"
-    },
-    {
-      "description": "USDT/USD",
-      "proName": "BINANCEUS:USDTUSD"
-    },
-    {
-      "description": "EUR / USD",
-      "proName": "FX_IDC:EURUSD"
-    },
-    {
-      "description": "JPY / USD",
-      "proName": "FX_IDC:JPYUSD"
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="normal">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nordic Digital Library</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/bookshelf.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <style>
+    /* Dashboard-specific overrides */
+    body { overflow: hidden; }
+    .main-area { height: 100vh; overflow: hidden; }
+    .library-scene { height: calc(100vh - var(--header-height)); }
+
+    /* Shelf sections layout */
+    .shelf-sections {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 0 0 80px;
+      position: relative;
     }
-  ],
-  "colorTheme": "light",
-  "isTransparent": false,
-  "showSymbolLogo": true,
-  "locale": "en"
-}
-  </script>
+
+    .shelf-row { flex: 1; }
+
+    .shelf-books {
+      height: calc(100% - 22px);
+      align-items: flex-end;
+      padding: 12px 32px 0 80px;
+      gap: 8px;
+    }
+
+    /* Bottom scene area */
+    .scene-floor {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 90px;
+      background: linear-gradient(
+        180deg,
+        rgba(100, 70, 30, 0.15) 0%,
+        rgba(80, 55, 20, 0.35) 100%
+      );
+      border-top: 3px solid rgba(0,0,0,0.12);
+    }
+
+    /* Librarian standing figure area */
+    .librarian-zone {
+      position: absolute;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .librarian-svg-wrap {
+      pointer-events: all;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .librarian-svg-wrap:hover { transform: scale(1.03); }
+
+    /* Currently reading — positioned bottom right */
+    .currently-reading {
+      position: absolute;
+      bottom: 100px;
+      right: 52px;
+      z-index: 6;
+    }
+
+    /* Sparkle accent */
+    .sparkle-icon {
+      position: absolute;
+      bottom: 24px;
+      right: 280px;
+      z-index: 6;
+      color: rgba(255,255,255,0.55);
+      font-size: 30px;
+      animation: sparkle-pulse 3s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    /* Stats row in scene top bar */
+    .scene-stats {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .stat-chip {
+      background: rgba(255,255,255,0.65);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 16px;
+      padding: 4px 12px;
+      font-size: 0.72rem;
+      color: var(--text-medium);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .stat-chip strong {
+      color: var(--text-dark);
+    }
+
+    /* Quick filter chips row */
+    .filter-row {
+      display: flex;
+      gap: 7px;
+      padding: 6px 32px 0 80px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+
+    /* Bench element on floor */
+    .scene-bench {
+      position: absolute;
+      bottom: 90px;
+      left: 25%;
+      right: 30%;
+      height: 28px;
+      background: linear-gradient(
+        180deg,
+        #c4956a 0%,
+        #a07040 40%,
+        #8b5e35 100%
+      );
+      border-radius: 4px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+      pointer-events: none;
+    }
+
+    .scene-bench::before,
+    .scene-bench::after {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      width: 14px;
+      height: 20px;
+      background: #7a5030;
+      border-radius: 0 0 3px 3px;
+    }
+    .scene-bench::before { left: 20px; }
+    .scene-bench::after  { right: 20px; }
+
+    /* Search modal */
+    .search-modal-results {
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .search-result-item:hover { background: var(--accent-light); }
+
+    .search-result-cover {
+      width: 32px;
+      height: 44px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: rgba(255,255,255,0.8);
+      font-weight: 600;
+      overflow: hidden;
+    }
+
+    .search-result-info {}
+    .search-result-title { font-size: 0.88rem; font-weight: 500; color: var(--text-dark); }
+    .search-result-author { font-size: 0.72rem; color: var(--text-light); font-style: italic; }
+  </style>
+</head>
+<body>
+
+<div id="app" class="app-layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">📚</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="nav-item active" title="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="library.html" class="nav-item" title="My Library">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+        <span class="nav-label">My Library</span>
+      </a>
+      <a href="featured.html" class="nav-item" title="Featured Collections">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+        <span class="nav-label">Featured</span>
+      </a>
+      <a href="authors.html" class="nav-item" title="Authors">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span class="nav-label">Authors</span>
+      </a>
+      <a href="chat.html" class="nav-item" title="Chat with Librarian">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span class="nav-label">Chat</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html" class="nav-item" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span class="nav-label">Settings</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ── Main Area ── -->
+  <div class="main-area">
+
+    <!-- Header -->
+    <header class="header">
+      <div style="width:60px"></div>
+      <h1 class="header-title">Nordic Digital Library</h1>
+      <div class="header-actions">
+        <div class="header-search" id="headerSearchTrigger">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <span style="font-size:0.8rem;color:var(--text-muted)">Global search</span>
+        </div>
+        <div class="header-avatar" id="userAvatar" title="Profile">R</div>
+      </div>
+    </header>
+
+    <!-- Library Scene -->
+    <div class="library-scene">
+      <div class="scene-inner" style="max-width:none;padding:0;height:100%;position:relative;">
+
+        <!-- Top bar: stats + theme switcher -->
+        <div class="scene-topbar" style="position:absolute;top:0;left:148px;right:0;z-index:10;padding:10px 24px;">
+          <div class="scene-stats" id="sceneStats">
+            <!-- filled by JS -->
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div class="theme-switcher" title="閱讀模式">
+              <span style="font-size:0.68rem;color:var(--text-light);margin-right:4px;">Mode</span>
+              <div class="theme-btn active" data-theme="normal"    title="標準"  onclick="switchTheme('normal')"></div>
+              <div class="theme-btn"        data-theme="relaxing"  title="放鬆"  onclick="switchTheme('relaxing')"></div>
+              <div class="theme-btn"        data-theme="educational" title="學習" onclick="switchTheme('educational')"></div>
+              <div class="theme-btn"        data-theme="intense"   title="專注"  onclick="switchTheme('intense')"></div>
+              <div class="theme-btn"        data-theme="night"     title="夜間"  onclick="switchTheme('night')"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter chips row -->
+        <div class="filter-row" id="filterRow" style="position:absolute;top:52px;left:148px;right:0;z-index:10;">
+          <!-- filled by JS -->
+        </div>
+
+        <!-- Bookshelves -->
+        <div class="shelf-sections">
+          <!-- Shelf 1 (top) -->
+          <div class="shelf-row">
+            <div class="shelf-books" id="shelf1"><!-- books injected --></div>
+            <div class="shelf-board"></div>
+          </div>
+          <!-- Shelf 2 (middle) -->
+          <div class="shelf-row">
+            <div class="shelf-books" id="shelf2"><!-- books injected --></div>
+            <div class="shelf-board"></div>
+          </div>
+          <!-- Shelf 3 (lower) -->
+          <div class="shelf-row">
+            <div class="shelf-books" id="shelf3"><!-- books injected --></div>
+            <div class="shelf-board"></div>
+          </div>
+        </div>
+
+        <!-- Floor -->
+        <div class="scene-floor"></div>
+
+        <!-- Bench -->
+        <div class="scene-bench"></div>
+
+        <!-- Librarian Figure -->
+        <div class="librarian-zone">
+          <div class="librarian-svg-wrap" onclick="window.location.href='chat.html'" title="與圖書館員聊天">
+            <!-- Illustrated librarian SVG -->
+            <svg width="130" height="260" viewBox="0 0 130 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Shadow -->
+              <ellipse cx="65" cy="252" rx="35" ry="6" fill="rgba(0,0,0,0.18)"/>
+              <!-- Legs -->
+              <rect x="48" y="185" width="14" height="62" rx="7" fill="#2C2416"/>
+              <rect x="68" y="185" width="14" height="62" rx="7" fill="#2C2416"/>
+              <!-- Shoes -->
+              <ellipse cx="55" cy="247" rx="10" ry="5" fill="#1a1008"/>
+              <ellipse cx="75" cy="247" rx="10" ry="5" fill="#1a1008"/>
+              <!-- Body / Sweater -->
+              <rect x="38" y="120" width="54" height="72" rx="10" fill="#5C4A3A"/>
+              <!-- Collar -->
+              <path d="M55 120 Q65 130 75 120" stroke="#4a3828" stroke-width="2" fill="none"/>
+              <!-- Left arm holding book -->
+              <rect x="18" y="128" width="22" height="12" rx="6" fill="#5C4A3A"/>
+              <rect x="12" y="124" width="12" height="50" rx="6" fill="#5C4A3A"/>
+              <!-- Book being held -->
+              <rect x="8" y="150" width="30" height="38" rx="3" fill="#f5f0e8" stroke="#8B5E3C" stroke-width="1.5"/>
+              <rect x="10" y="152" width="26" height="34" rx="2" fill="#f8f4ee"/>
+              <text x="23" y="166" text-anchor="middle" font-family="serif" font-size="5" fill="#5C4A3A">WEL</text>
+              <text x="23" y="174" text-anchor="middle" font-family="serif" font-size="5" fill="#5C4A3A">COME</text>
+              <!-- Right arm (pointing) -->
+              <rect x="90" y="128" width="22" height="12" rx="6" fill="#5C4A3A"/>
+              <rect x="98" y="128" width="12" height="42" rx="6" fill="#5C4A3A" transform="rotate(-20,104,128)"/>
+              <!-- Neck -->
+              <rect x="59" y="106" width="12" height="18" rx="6" fill="#c4956a"/>
+              <!-- Head -->
+              <ellipse cx="65" cy="90" rx="26" ry="28" fill="#d4a070"/>
+              <!-- Hair -->
+              <ellipse cx="65" cy="66" rx="26" ry="14" fill="#4a3520"/>
+              <rect x="39" y="66" width="52" height="12" rx="0" fill="#4a3520"/>
+              <!-- Face features -->
+              <ellipse cx="57" cy="88" rx="4" ry="5" fill="#fff" opacity="0.9"/>
+              <ellipse cx="73" cy="88" rx="4" ry="5" fill="#fff" opacity="0.9"/>
+              <circle cx="57" cy="89" r="2.5" fill="#3a2a1a"/>
+              <circle cx="73" cy="89" r="2.5" fill="#3a2a1a"/>
+              <!-- Smile -->
+              <path d="M57 98 Q65 104 73 98" stroke="#8B5E3C" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+              <!-- Eyebrows -->
+              <path d="M53 83 Q57 80 61 83" stroke="#4a3520" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+              <path d="M69 83 Q73 80 77 83" stroke="#4a3520" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <!-- Chat bubble -->
+          <div class="librarian-bubble" onclick="window.location.href='chat.html'" id="librarianBubble">
+            今天想讀點什麼？✨
+          </div>
+        </div>
+
+        <!-- Currently Reading Widget -->
+        <div class="currently-reading" id="currentlyReading" style="display:none">
+          <div class="reading-book-stand" onclick="goToCurrentBook()">
+            <div class="reading-label">📖 Currently Reading</div>
+            <div class="reading-title" id="currentBookTitle">—</div>
+            <div class="reading-progress-wrap">
+              <div class="reading-progress-text">
+                <span>進度</span>
+                <span id="currentBookProgress">0%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-bar-fill" id="currentBookProgressBar" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sparkle -->
+        <div class="sparkle-icon">✦</div>
+
+      </div><!-- /scene-inner -->
+    </div><!-- /library-scene -->
+
+  </div><!-- /main-area -->
+</div><!-- /app -->
+
+<!-- Search Modal -->
+<div class="modal-overlay" id="searchModal" onclick="closeSearch(event)">
+  <div class="modal" style="width:min(560px,92vw)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="searchInput" class="form-input" placeholder="搜尋書名、作者..." style="flex:1;border:none;padding:4px 0;font-size:1rem;outline:none;background:transparent;">
+    </div>
+    <div class="search-modal-results" id="searchResults"></div>
+  </div>
 </div>
-<!-- TradingView Widget END -->
 
-<iframe style="border: 0px solid #333333; overflow: hidden; width: 320px; height: 580px;" 
-        src="//fred.stlouisfed.org/fred-glance-widget.php?series_ids=SOFR,CPALTT01USA661S,UNRATE,DGS10,QUSR628BIS&transformations=lin,lin,lin,lin,lin" 
-        height="580px" width=320px frameborder="0" scrolling="no">
-</iframe>
+<!-- Toast -->
+<div id="toast"></div>
 
+<script src="js/storage.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  // ── Init ────────────────────────────────────────────────
+  Storage.initMockData();
+  Utils.initTheme();
 
+  let allBooks   = Storage.getBooks();
+  let allRecords = Storage.getRecords();
+  let activeFilter = { category: 'all', status: 'all' };
+
+  // ── Render bookshelf ────────────────────────────────────
+  function renderShelves() {
+    const books   = Storage.getBooks();
+    const records = Storage.getRecords();
+
+    // Filter books
+    let filtered = Utils.filterBooks(books, records, {
+      category: activeFilter.category !== 'all' ? activeFilter.category : null,
+      status:   activeFilter.status   !== 'all' ? activeFilter.status   : null,
+    });
+
+    // Distribute books across 3 shelves
+    const third = Math.ceil(filtered.length / 3);
+    const shelves = [
+      filtered.slice(0, third),
+      filtered.slice(third, third * 2),
+      filtered.slice(third * 2),
+    ];
+
+    const shelfIds = ['shelf1', 'shelf2', 'shelf3'];
+
+    // Mixed face-out / spine-out for visual variety
+    const patterns = [
+      // Shelf 1: mostly face-out (top display shelf)
+      (i) => 'face-out',
+      // Shelf 2: alternating with some spines
+      (i) => (i % 5 === 2 || i % 7 === 4) ? 'spine-out' : 'face-out',
+      // Shelf 3: more spines
+      (i) => (i % 3 === 1) ? 'spine-out' : 'face-out',
+    ];
+
+    shelfIds.forEach((id, si) => {
+      const el = document.getElementById(id);
+      const shelfBooks = shelves[si];
+
+      if (!shelfBooks || shelfBooks.length === 0) {
+        el.innerHTML = `<div class="empty-shelf-msg"><p>（空書架）</p></div>`;
+        return;
+      }
+
+      el.innerHTML = shelfBooks.map((book, i) => {
+        const rec   = records[book.id] || {};
+        const type  = patterns[si](i);
+        const color = book.coverColor || Utils.generateColor(book.id);
+        const stars = rec.rating ? '★'.repeat(rec.rating) : '';
+        const statusClass = rec.status || 'want-to-read';
+        const statusLabel = Utils.statusText(rec.status);
+
+        // Size variation
+        const sizeClass = si === 0
+          ? (i % 4 === 0 ? 'large' : '')
+          : (i % 6 === 0 ? 'large' : i % 4 === 2 ? 'small' : '');
+
+        const coverImg = book.coverUrl
+          ? `<img src="${book.coverUrl}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`
+          : '';
+
+        if (type === 'face-out') {
+          const textColor = Utils.isLightColor(color) ? '#1e160a' : '#ffffff';
+          return `
+            <div class="book-card face-out ${sizeClass}" onclick="location.href='book.html?id=${encodeURIComponent(book.id)}'">
+              <div class="book-cover" style="background:${color};position:relative;">
+                ${coverImg}
+                ${!book.coverUrl ? `
+                  <div class="book-cover-inner" style="position:absolute;bottom:0;left:0;right:0;padding:6px;background:linear-gradient(0deg,rgba(0,0,0,0.65) 0%,transparent 100%);">
+                    <div class="book-cover-title" style="color:#fff">${Utils.escHtml(book.title)}</div>
+                    <div class="book-cover-author" style="color:rgba(255,255,255,0.8)">${Utils.escHtml(book.author||'')}</div>
+                  </div>` : ''}
+              </div>
+              <div class="book-tooltip">
+                <div class="tooltip-title">${Utils.escHtml(book.title)}</div>
+                <div class="tooltip-author">${Utils.escHtml(book.author||'')}</div>
+                <div class="tooltip-meta">
+                  <span class="tooltip-rating">${stars || '—'}</span>
+                  <span class="tooltip-status status-badge ${statusClass}">${statusLabel}</span>
+                </div>
+              </div>
+            </div>`;
+        } else {
+          return `
+            <div class="book-card spine-out ${si===0?'tall':''}" onclick="location.href='book.html?id=${encodeURIComponent(book.id)}'">
+              <div class="book-spine" style="background:${color};">
+                <span class="book-spine-text">${Utils.escHtml(book.title)}</span>
+              </div>
+              <div class="book-tooltip">
+                <div class="tooltip-title">${Utils.escHtml(book.title)}</div>
+                <div class="tooltip-author">${Utils.escHtml(book.author||'')}</div>
+              </div>
+            </div>`;
+        }
+      }).join('');
+    });
+
+    // Stats
+    renderStats();
+  }
+
+  function renderStats() {
+    const stats = Storage.getStats();
+    document.getElementById('sceneStats').innerHTML = `
+      <div class="stat-chip">📚 <strong>${stats.totalBooks}</strong> 本藏書</div>
+      <div class="stat-chip">✅ <strong>${stats.completedThisYear}</strong> 今年已讀</div>
+      ${stats.avgRating !== '—' ? `<div class="stat-chip">⭐ <strong>${stats.avgRating}</strong> 平均評分</div>` : ''}
+      ${stats.topCategory ? `<div class="stat-chip">🏷️ <strong>${stats.topCategory}</strong></div>` : ''}
+    `;
+  }
+
+  // ── Filter chips ────────────────────────────────────────
+  function renderFilters() {
+    const books    = Storage.getBooks();
+    const cats     = Utils.getCategories(books).filter(c => c !== 'all');
+    const statuses = ['reading', 'completed', 'want-to-read'];
+    const statusLabels = { reading:'閱讀中', completed:'已讀', 'want-to-read':'想讀' };
+
+    document.getElementById('filterRow').innerHTML = `
+      <div class="filter-chip ${activeFilter.category==='all'?'active':''}"
+           onclick="setFilter('category','all')">全部</div>
+      ${cats.map(c => `
+        <div class="filter-chip ${activeFilter.category===c?'active':''}"
+             onclick="setFilter('category','${c}')">${c}</div>
+      `).join('')}
+      <div style="width:1px;background:rgba(255,255,255,0.3);margin:0 4px;align-self:stretch"></div>
+      ${statuses.map(s => `
+        <div class="filter-chip ${activeFilter.status===s?'active':''}"
+             onclick="setFilter('status','${s}')">${statusLabels[s]}</div>
+      `).join('')}
+    `;
+  }
+
+  function setFilter(key, value) {
+    if (key === 'category') {
+      activeFilter.category = activeFilter.category === value ? 'all' : value;
+    } else {
+      activeFilter.status = activeFilter.status === value ? 'all' : value;
+    }
+    renderFilters();
+    renderShelves();
+  }
+
+  // ── Currently reading widget ─────────────────────────────
+  function renderCurrentlyReading() {
+    const stats = Storage.getStats();
+    const books  = stats.currentlyReading;
+    const records = Storage.getRecords();
+
+    if (books.length === 0) {
+      document.getElementById('currentlyReading').style.display = 'none';
+      return;
+    }
+
+    const book = books[0];
+    const rec  = Storage.getRecord(book.id);
+
+    document.getElementById('currentlyReading').style.display = 'block';
+    document.getElementById('currentBookTitle').textContent = book.title;
+    document.getElementById('currentBookProgress').textContent = `${rec.progress || 0}%`;
+    document.getElementById('currentBookProgressBar').style.width = `${rec.progress || 0}%`;
+
+    window._currentBookId = book.id;
+  }
+
+  window.goToCurrentBook = function() {
+    if (window._currentBookId) {
+      location.href = `book.html?id=${encodeURIComponent(window._currentBookId)}`;
+    }
+  };
+
+  // ── Theme switcher ──────────────────────────────────────
+  window.switchTheme = function(theme) {
+    Utils.applyTheme(theme);
+  };
+
+  // ── Librarian bubble ────────────────────────────────────
+  function randomGreeting() {
+    const greetings = [
+      '今天想讀點什麼？✨',
+      '需要我推薦一本書嗎？',
+      '歡迎回來！繼續閱讀吧。',
+      '有什麼書想聊聊嗎？',
+      '讓我來幫你找書！',
+    ];
+    const name = Storage.getSetting('librarianName') || '小書';
+    const idx  = Math.floor(Date.now() / 60000) % greetings.length;
+    document.getElementById('librarianBubble').textContent = greetings[idx];
+  }
+
+  // ── Search ──────────────────────────────────────────────
+  document.getElementById('headerSearchTrigger').addEventListener('click', openSearch);
+
+  function openSearch() {
+    document.getElementById('searchModal').classList.add('open');
+    setTimeout(() => document.getElementById('searchInput').focus(), 100);
+  }
+
+  window.closeSearch = function(e) {
+    if (e.target === document.getElementById('searchModal')) {
+      document.getElementById('searchModal').classList.remove('open');
+    }
+  };
+
+  document.getElementById('searchInput').addEventListener('input', Utils.debounce(function() {
+    const query = this.value.trim();
+    if (!query) { document.getElementById('searchResults').innerHTML = ''; return; }
+
+    const books   = Storage.getBooks();
+    const records = Storage.getRecords();
+    const results = Utils.filterBooks(books, records, { query }).slice(0, 12);
+
+    document.getElementById('searchResults').innerHTML = results.length === 0
+      ? `<p style="text-align:center;color:var(--text-light);padding:20px;font-style:italic;">找不到「${Utils.escHtml(query)}」相關的書</p>`
+      : results.map(book => {
+          const color = book.coverColor || Utils.generateColor(book.id);
+          return `
+            <div class="search-result-item" onclick="location.href='book.html?id=${encodeURIComponent(book.id)}'">
+              <div class="search-result-cover" style="background:${color}">
+                ${book.coverUrl ? `<img src="${book.coverUrl}" style="width:100%;height:100%;object-fit:cover;">` : ''}
+              </div>
+              <div class="search-result-info">
+                <div class="search-result-title">${Utils.escHtml(book.title)}</div>
+                <div class="search-result-author">${Utils.escHtml(book.author||'')}</div>
+              </div>
+            </div>`;
+        }).join('');
+  }, 200));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.getElementById('searchModal').classList.remove('open');
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+  });
+
+  // ── User avatar ─────────────────────────────────────────
+  function updateAvatar() {
+    const name = Storage.getSetting('userName') || '';
+    const initial = name.charAt(0).toUpperCase() || '📚';
+    document.getElementById('userAvatar').textContent = initial;
+  }
+
+  // ── Init ─────────────────────────────────────────────────
+  renderFilters();
+  renderShelves();
+  renderCurrentlyReading();
+  randomGreeting();
+  updateAvatar();
+
+  // Apply saved theme
+  const savedTheme = Storage.getSetting('readingMode') || 'normal';
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.theme === savedTheme);
+  });
+</script>
+</body>
+</html>

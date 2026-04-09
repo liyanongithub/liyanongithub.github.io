@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="normal">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Detail — Nordic Digital Library</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/bookshelf.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <style>
+    .book-detail-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 40px;
+      max-width: 900px;
+    }
+
+    .book-detail-cover {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+    }
+
+    .cover-img-wrap {
+      width: 100%;
+      aspect-ratio: 2/3;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: -6px 6px 24px rgba(0,0,0,0.2), 4px 0 12px rgba(0,0,0,0.1);
+      margin-bottom: 16px;
+      position: relative;
+      background: var(--sidebar-border);
+    }
+
+    .cover-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .cover-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .cover-placeholder .cp-title {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.95);
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .cover-placeholder .cp-author {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.75);
+      font-style: italic;
+    }
+
+    .open-drive-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: 100%;
+      padding: 10px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: background 0.2s;
+      text-decoration: none;
+      margin-bottom: 8px;
+    }
+
+    .open-drive-btn:hover { background: var(--wood-dark); }
+
+    .edit-cover-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 8px;
+      background: var(--accent-light);
+      color: var(--accent);
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 500;
+      transition: background 0.2s;
+      cursor: pointer;
+      border: 1px solid var(--sidebar-border);
+    }
+
+    .edit-cover-btn:hover { background: var(--sidebar-border); }
+
+    .book-detail-info {}
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-light);
+      font-size: 0.8rem;
+      margin-bottom: 20px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--accent); }
+
+    .book-title-large {
+      font-family: var(--font-serif);
+      font-size: 2.2rem;
+      font-weight: 400;
+      line-height: 1.2;
+      color: var(--text-dark);
+      margin-bottom: 6px;
+      letter-spacing: 0.02em;
+    }
+
+    .book-author-large {
+      font-size: 1rem;
+      color: var(--text-light);
+      font-style: italic;
+      margin-bottom: 16px;
+    }
+
+    .book-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--sidebar-border);
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .meta-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .meta-value {
+      font-size: 0.85rem;
+      color: var(--text-medium);
+      font-weight: 500;
+    }
+
+    .section-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-light);
+      margin-bottom: 10px;
+      margin-top: 24px;
+    }
+
+    .description-text {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: var(--text-medium);
+      max-height: 120px;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+      position: relative;
+    }
+
+    .description-text.expanded { max-height: 600px; }
+
+    .description-text:not(.expanded)::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: linear-gradient(transparent, var(--page-bg));
+    }
+
+    .expand-btn {
+      font-size: 0.78rem;
+      color: var(--accent);
+      cursor: pointer;
+      margin-top: 6px;
+      display: inline-block;
+    }
+
+    /* Reading status selector */
+    .status-selector {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .status-option {
+      padding: 7px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1.5px solid var(--sidebar-border);
+      background: var(--page-bg);
+      color: var(--text-light);
+      transition: all 0.2s;
+    }
+
+    .status-option:hover { border-color: var(--wood-light); color: var(--text-medium); }
+
+    .status-option.selected-want    { background: rgba(139,115,85,.15); border-color: #8b7355; color: #8b7355; }
+    .status-option.selected-reading  { background: rgba(74,140,107,.15); border-color: #4a8c6b; color: #4a8c6b; }
+    .status-option.selected-completed{ background: rgba(107,76,42,.15); border-color: #6b4c2a; color: #6b4c2a; }
+    .status-option.selected-dropped  { background: rgba(180,76,60,.12); border-color: #b44c3c; color: #b44c3c; }
+
+    /* Progress slider */
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--sidebar-border);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--wood-warm);
+      border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      cursor: pointer;
+    }
+
+    .progress-pct {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-medium);
+      min-width: 36px;
+      text-align: right;
+    }
+
+    /* Dates row */
+    .dates-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Save indicator */
+    .save-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      color: var(--status-reading);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .save-indicator.show { opacity: 1; }
+
+    /* Delete button */
+    .delete-btn {
+      font-size: 0.78rem;
+      color: #b44c3c;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .delete-btn:hover { background: rgba(180,76,60,.1); }
+
+    @media (max-width: 700px) {
+      .book-detail-layout { grid-template-columns: 1fr; }
+      .book-detail-cover  { position: static; }
+      .cover-img-wrap     { max-width: 180px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">📚</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="nav-item" title="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="library.html" class="nav-item active" title="My Library">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+        <span class="nav-label">My Library</span>
+      </a>
+      <a href="featured.html" class="nav-item" title="Featured">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+        <span class="nav-label">Featured</span>
+      </a>
+      <a href="authors.html" class="nav-item" title="Authors">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span class="nav-label">Authors</span>
+      </a>
+      <a href="chat.html" class="nav-item" title="Chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span class="nav-label">Chat</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html" class="nav-item" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span class="nav-label">Settings</span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <!-- Header -->
+    <header class="header">
+      <div style="width:60px"></div>
+      <h1 class="header-title">Nordic Digital Library</h1>
+      <div class="header-actions">
+        <div class="header-avatar" id="userAvatar">R</div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <a href="javascript:history.back()" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+        返回
+      </a>
+
+      <div class="book-detail-layout" id="bookDetail">
+        <div style="text-align:center;color:var(--text-muted);padding:80px;grid-column:1/-1">
+          正在載入...
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Cover Modal -->
+<div class="modal-overlay" id="coverModal" onclick="closeCoverModal(event)">
+  <div class="modal">
+    <h2 class="modal-title">編輯封面圖片</h2>
+    <div class="form-group">
+      <label class="form-label">封面圖片 URL</label>
+      <input type="url" id="coverUrlInput" class="form-input" placeholder="https://..." autocomplete="off">
+      <small style="color:var(--text-muted);font-size:0.72rem;margin-top:4px">輸入圖片網址，或留空使用顏色封面</small>
+    </div>
+    <div class="form-group">
+      <label class="form-label">封面背景色</label>
+      <input type="color" id="coverColorInput" style="width:60px;height:36px;border:none;cursor:pointer;border-radius:4px;">
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <button onclick="closeCoverModal()" class="btn btn-secondary">取消</button>
+      <button onclick="saveCover()" class="btn btn-primary">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="js/storage.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  Utils.initTheme();
+
+  const params = new URLSearchParams(location.search);
+  const bookId = params.get('id');
+
+  let book, rec;
+
+  function init() {
+    if (!bookId) { location.href = 'library.html'; return; }
+    book = Storage.getBook(bookId);
+    if (!book) {
+      document.getElementById('bookDetail').innerHTML =
+        `<p style="color:var(--text-muted);padding:80px;text-align:center;grid-column:1/-1">找不到這本書。</p>`;
+      return;
+    }
+    rec = Storage.getRecord(bookId);
+    render();
+
+    // Update avatar
+    const name = Storage.getSetting('userName') || '';
+    document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase() || '📚';
+  }
+
+  function render() {
+    const color = book.coverColor || Utils.generateColor(book.id);
+    const textColor = Utils.isLightColor(color) ? '#1e160a' : '#ffffff';
+
+    document.title = `${book.title} — Nordic Digital Library`;
+
+    document.getElementById('bookDetail').innerHTML = `
+      <!-- Cover column -->
+      <div class="book-detail-cover">
+        <div class="cover-img-wrap">
+          ${book.coverUrl
+            ? `<img src="${Utils.escHtml(book.coverUrl)}" alt="${Utils.escHtml(book.title)}">`
+            : `<div class="cover-placeholder" style="background:${color}">
+                <div class="cp-title" style="color:${textColor}">${Utils.escHtml(book.title)}</div>
+                <div class="cp-author" style="color:${Utils.isLightColor(color)?'rgba(0,0,0,0.5)':'rgba(255,255,255,0.7)'}">${Utils.escHtml(book.author||'')}</div>
+               </div>`
+          }
+        </div>
+
+        ${book.driveViewUrl
+          ? `<a href="${Utils.escHtml(book.driveViewUrl)}" target="_blank" rel="noopener" class="open-drive-btn">
+               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+               在 Google Drive 中開啟
+             </a>`
+          : ''}
+
+        <button class="edit-cover-btn" onclick="openCoverModal()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          編輯封面 / 資訊
+        </button>
+      </div>
+
+      <!-- Info column -->
+      <div class="book-detail-info">
+        <div class="book-title-large">${Utils.escHtml(book.title)}</div>
+        ${book.author ? `<div class="book-author-large">${Utils.escHtml(book.author)}</div>` : ''}
+
+        <!-- Metadata chips -->
+        <div class="book-meta-row">
+          ${book.category ? `<div class="meta-item"><span class="meta-label">分類</span><span class="meta-value">${Utils.escHtml(book.category)}</span></div>` : ''}
+          ${book.publishDate ? `<div class="meta-item"><span class="meta-label">出版年份</span><span class="meta-value">${Utils.escHtml(book.publishDate)}</span></div>` : ''}
+          ${book.publisher ? `<div class="meta-item"><span class="meta-label">出版社</span><span class="meta-value">${Utils.escHtml(book.publisher)}</span></div>` : ''}
+          ${book.pageCount ? `<div class="meta-item"><span class="meta-label">頁數</span><span class="meta-value">${book.pageCount} 頁</span></div>` : ''}
+        </div>
+
+        <!-- Description -->
+        ${book.description ? `
+          <div class="section-title">簡介</div>
+          <div class="description-text" id="descText">${Utils.escHtml(book.description)}</div>
+          <span class="expand-btn" id="expandBtn" onclick="toggleDesc()">顯示更多 ▾</span>
+        ` : ''}
+
+        <!-- Rating -->
+        <div class="section-title">我的評分</div>
+        <div class="star-rating" id="starRating">
+          ${[1,2,3,4,5].map(n => `
+            <span class="star ${rec.rating && n <= rec.rating ? 'active' : ''}"
+                  onclick="setRating(${n})" onmouseover="hoverRating(${n})" onmouseout="unhoverRating()">★</span>
+          `).join('')}
+          ${rec.rating ? `<span style="font-size:0.78rem;color:var(--text-light);margin-left:8px;align-self:center">${rec.rating}/5</span>` : ''}
+        </div>
+
+        <!-- Status -->
+        <div class="section-title">閱讀狀態</div>
+        <div class="status-selector" id="statusSelector">
+          ${[
+            { v: 'want-to-read', label: '🔖 想讀' },
+            { v: 'reading',      label: '📖 閱讀中' },
+            { v: 'completed',    label: '✅ 已讀完' },
+            { v: 'dropped',      label: '⏸️ 放棄' },
+          ].map(opt => `
+            <div class="status-option ${rec.status===opt.v ? 'selected-'+opt.v.replace('want-to-read','want') : ''}"
+                 data-status="${opt.v}" onclick="setStatus('${opt.v}')">${opt.label}</div>
+          `).join('')}
+        </div>
+
+        <!-- Progress -->
+        <div class="section-title">閱讀進度</div>
+        <div class="progress-wrap">
+          <input type="range" id="progressSlider" min="0" max="100" value="${rec.progress||0}"
+                 oninput="updateProgress(this.value)">
+          <span class="progress-pct" id="progressPct">${rec.progress||0}%</span>
+        </div>
+
+        <!-- Dates -->
+        <div class="section-title" style="margin-top:20px">日期</div>
+        <div class="dates-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">開始閱讀</label>
+            <input type="date" class="form-input" id="startDate" value="${rec.startDate||''}"
+                   onchange="saveField('startDate', this.value)">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">完成日期</label>
+            <input type="date" class="form-input" id="finishDate" value="${rec.finishDate||''}"
+                   onchange="saveField('finishDate', this.value)">
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="section-title" style="display:flex;align-items:center;gap:10px">
+          閱讀心得
+          <span class="save-indicator" id="saveIndicator">✓ 已儲存</span>
+        </div>
+        <textarea class="form-textarea" id="notesArea" placeholder="記錄你的閱讀感想、印象深刻的段落…"
+                  style="min-height:140px">${Utils.escHtml(rec.notes||'')}</textarea>
+
+        <!-- Action row -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px">
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="saveNotes()">儲存心得</button>
+            <a href="chat.html" class="btn btn-secondary">💬 與圖書館員討論這本書</a>
+          </div>
+          <button class="delete-btn" onclick="deleteBook()">刪除</button>
+        </div>
+      </div>
+    `;
+
+    // Bind notes auto-save
+    const notesArea = document.getElementById('notesArea');
+    if (notesArea) {
+      notesArea.addEventListener('input', Utils.debounce(() => {
+        Storage.saveRecord(bookId, { notes: notesArea.value });
+        showSaved();
+      }, 800));
+    }
+  }
+
+  function toggleDesc() {
+    const el = document.getElementById('descText');
+    const btn = document.getElementById('expandBtn');
+    el.classList.toggle('expanded');
+    btn.textContent = el.classList.contains('expanded') ? '收起 ▲' : '顯示更多 ▾';
+  }
+
+  function setRating(n) {
+    rec = Storage.saveRecord(bookId, { rating: rec.rating === n ? null : n });
+    render();
+    Utils.showToast(rec.rating ? `評了 ${rec.rating} 顆星 ⭐` : '已清除評分');
+  }
+
+  function hoverRating(n) {
+    document.querySelectorAll('.star').forEach((s, i) => {
+      s.style.color = i < n ? '#d4a843' : '';
+    });
+  }
+
+  function unhoverRating() {
+    document.querySelectorAll('.star').forEach((s, i) => {
+      s.style.color = (rec.rating && i < rec.rating) ? '#d4a843' : '';
+    });
+  }
+
+  function setStatus(status) {
+    rec = Storage.saveRecord(bookId, { status });
+    render();
+    Utils.showToast('狀態已更新：' + Utils.statusText(status));
+  }
+
+  function updateProgress(val) {
+    document.getElementById('progressPct').textContent = val + '%';
+    Storage.saveRecord(bookId, { progress: parseInt(val) });
+  }
+
+  function saveField(field, value) {
+    Storage.saveRecord(bookId, { [field]: value });
+    Utils.showToast('已儲存');
+  }
+
+  function saveNotes() {
+    const notes = document.getElementById('notesArea').value;
+    Storage.saveRecord(bookId, { notes });
+    showSaved();
+    Utils.showToast('心得已儲存 ✓');
+  }
+
+  function showSaved() {
+    const el = document.getElementById('saveIndicator');
+    if (!el) return;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2000);
+  }
+
+  function deleteBook() {
+    if (!confirm(`確定要從圖書館刪除《${book.title}》嗎？`)) return;
+    Storage.deleteBook(bookId);
+    Utils.showToast('書本已刪除');
+    setTimeout(() => { location.href = 'library.html'; }, 800);
+  }
+
+  // Cover modal
+  function openCoverModal() {
+    document.getElementById('coverUrlInput').value = book.coverUrl || '';
+    document.getElementById('coverColorInput').value = book.coverColor || Utils.generateColor(book.id);
+    document.getElementById('coverModal').classList.add('open');
+  }
+
+  window.closeCoverModal = function(e) {
+    if (!e || e.target === document.getElementById('coverModal')) {
+      document.getElementById('coverModal').classList.remove('open');
+    }
+  };
+
+  window.saveCover = function() {
+    const url   = document.getElementById('coverUrlInput').value.trim();
+    const color = document.getElementById('coverColorInput').value;
+    Storage.updateBook(bookId, { coverUrl: url, coverColor: color });
+    book = Storage.getBook(bookId);
+    closeCoverModal();
+    render();
+    Utils.showToast('封面已更新');
+  };
+
+  init();
+</script>
+</body>
+</html>
