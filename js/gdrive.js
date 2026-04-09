@@ -102,23 +102,23 @@ const GDrive = (() => {
     return '';
   }
 
-  /* ── Read Google Sheets metadata ────────────────────── */
+  /* ── Read Google Sheets → array of book metadata ────── */
   async function readSheet(sheetId) {
     const token = getToken();
-    if (!token || !sheetId) return new Map();
+    if (!token || !sheetId) return [];
 
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(sheetId)}/values/A:K`;
     const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (!resp.ok) {
-      console.warn('Sheets API error:', resp.status);
-      return new Map();
+      const errText = await resp.text().catch(() => '');
+      throw new Error(`Sheets API ${resp.status}: ${errText.slice(0, 120)}`);
     }
 
     const data = await resp.json();
     const rows = data.values || [];
-    if (rows.length < 2) return new Map();
+    if (rows.length < 2) return [];
 
-    // Detect column indices from header row (case-insensitive, flexible naming)
+    // Auto-detect column positions from header row
     const HEADER_MAP = {
       title:       ['書名', 'title', 'name'],
       author:      ['作者', 'author'],
@@ -128,7 +128,7 @@ const GDrive = (() => {
       pageCount:   ['頁數', '頁', 'pages'],
       description: ['總結', '描述', '簡介', 'description', 'summary'],
       coverUrl:    ['封面連結', '封面', 'cover', 'coverurl'],
-      drivePath:   ['path', '路徑', 'drive'],
+      drivePath:   ['path', '路徑', 'drive', 'link', '連結'],
     };
 
     const headers = rows[0].map(h => (h || '').trim().toLowerCase());
@@ -136,94 +136,122 @@ const GDrive = (() => {
     for (const [field, names] of Object.entries(HEADER_MAP)) {
       idx[field] = names.reduce((found, n) => {
         if (found >= 0) return found;
-        const i = headers.indexOf(n.toLowerCase());
+        const i = headers.findIndex(h => h === n.toLowerCase() || h.includes(n.toLowerCase()));
         return i >= 0 ? i : found;
       }, -1);
     }
 
-    const map = new Map();
+    const results = [];
     for (let r = 1; r < rows.length; r++) {
       const row = rows[r];
-      const path = idx.drivePath >= 0 ? (row[idx.drivePath] || '') : '';
-      if (!path) continue;
+      const get = (field) => idx[field] >= 0 ? (row[idx[field]] || '').trim() : '';
 
-      // Extract Drive file ID from URL like https://drive.google.com/file/d/{ID}/view
+      // Extract Drive file ID from Path column URL
+      const path = get('drivePath');
+      if (!path) continue;
       const match = path.match(/\/d\/([a-zA-Z0-9_-]+)/);
       if (!match) continue;
-      const fileId = match[1];
 
-      const meta = {};
-      const get = (field) => idx[field] >= 0 ? (row[idx[field]] || '').trim() : '';
-      if (get('title'))       meta.title       = get('title');
-      if (get('author'))      meta.author      = get('author');
-      if (get('publishDate')) meta.publishDate = get('publishDate');
-      if (get('category'))    meta.category    = get('category');
-      if (get('language'))    meta.language    = get('language');
-      if (get('pageCount'))   meta.pageCount   = parseInt(get('pageCount')) || null;
-      if (get('description')) meta.description = get('description');
-      if (get('coverUrl'))    meta.coverUrl    = get('coverUrl');
-
-      map.set(fileId, meta);
+      results.push({
+        driveFileId:  match[1],
+        title:        get('title'),
+        author:       get('author'),
+        publishDate:  get('publishDate'),
+        category:     get('category'),
+        language:     get('language'),
+        pageCount:    parseInt(get('pageCount')) || null,
+        description:  get('description'),
+        coverUrl:     get('coverUrl'),
+      });
     }
-
-    return map;
+    return results;
   }
 
-  /* ── Sync Books from Drive ───────────────────────────── */
+  /* ── Sync Books ──────────────────────────────────────── */
   async function syncBooks(folderId, sheetId, onProgress) {
-    // Support old 2-arg call: syncBooks(folderId, onProgress)
+    // Support legacy 2-arg call: syncBooks(folderId, onProgress)
     if (typeof sheetId === 'function') { onProgress = sheetId; sheetId = ''; }
 
-    const [files, sheetMeta] = await Promise.all([
-      listFiles(folderId),
-      sheetId ? readSheet(sheetId) : Promise.resolve(new Map()),
-    ]);
+    if (sheetId) {
+      // ── Sheet-first mode: spreadsheet IS the book list ──
+      onProgress?.(0, 0, '正在讀取試算表…');
+      const sheetBooks = await readSheet(sheetId);
+      if (sheetBooks.length === 0) throw new Error('試算表無資料，請確認 Sheet ID 和 Path 欄位');
 
-    const added = [];
-    const updated = [];
+      const added = [], updated = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      onProgress?.(i + 1, files.length, file.name);
+      for (let i = 0; i < sheetBooks.length; i++) {
+        const meta = sheetBooks[i];
+        onProgress?.(i + 1, sheetBooks.length, meta.title || meta.driveFileId);
 
-      const bookData = fileToBook(file);
-      const meta     = sheetMeta.get(file.id) || {};
-
-      // Merge sheet metadata (sheet wins for most fields, Drive thumbnail is fallback for cover)
-      const merged = {
-        ...bookData,
-        ...meta,
-        coverUrl:     meta.coverUrl || bookData.coverUrl || '',
-        driveViewUrl: bookData.driveViewUrl,
-        driveMimeType: bookData.driveMimeType,
-      };
-
-      const existing = Storage.getBook(file.id);
-      if (existing) {
-        // Update Drive fields + sheet metadata; preserve user-edited records
-        const updates = {
-          driveViewUrl:  merged.driveViewUrl,
-          driveMimeType: merged.driveMimeType,
-          coverUrl:      existing.coverUrl || merged.coverUrl,
+        const bookData = {
+          id:           meta.driveFileId,
+          title:        meta.title        || '',
+          author:       meta.author       || '',
+          category:     meta.category     || '',
+          language:     meta.language     || '',
+          pageCount:    meta.pageCount    || null,
+          description:  meta.description  || '',
+          coverUrl:     meta.coverUrl     || '',
+          publishDate:  meta.publishDate  || '',
+          tags:         [],
+          publisher:    '',
+          coverColor:   '',
+          driveFileId:  meta.driveFileId,
+          driveViewUrl: `https://drive.google.com/file/d/${meta.driveFileId}/view`,
+          driveMimeType: '',
+          addedDate:    new Date().toISOString().split('T')[0],
         };
-        // Only overwrite metadata fields if sheet data is available
-        if (meta.title)       updates.title       = meta.title;
-        if (meta.author)      updates.author      = meta.author;
-        if (meta.category)    updates.category    = meta.category;
-        if (meta.language)    updates.language    = meta.language;
-        if (meta.pageCount)   updates.pageCount   = meta.pageCount;
-        if (meta.description) updates.description = meta.description;
-        if (meta.publishDate) updates.publishDate = meta.publishDate;
-        Storage.updateBook(file.id, updates);
-        updated.push(file.name);
-      } else {
-        Storage.addBook(merged);
-        added.push(file.name);
-      }
-    }
 
-    Storage.setSetting('lastSyncDate', new Date().toISOString());
-    return { added, updated, total: files.length };
+        const existing = Storage.getBook(meta.driveFileId);
+        if (existing) {
+          Storage.updateBook(meta.driveFileId, {
+            title:        meta.title        || existing.title,
+            author:       meta.author       || existing.author,
+            category:     meta.category     || existing.category,
+            language:     meta.language     || existing.language,
+            pageCount:    meta.pageCount    || existing.pageCount,
+            description:  meta.description  || existing.description,
+            coverUrl:     existing.coverUrl || meta.coverUrl || '',
+            publishDate:  meta.publishDate  || existing.publishDate,
+            driveViewUrl: bookData.driveViewUrl,
+          });
+          updated.push(meta.title || meta.driveFileId);
+        } else {
+          Storage.addBook(bookData);
+          added.push(meta.title || meta.driveFileId);
+        }
+      }
+
+      Storage.setSetting('lastSyncDate', new Date().toISOString());
+      return { added, updated, total: sheetBooks.length };
+
+    } else {
+      // ── Drive-only mode: search for files in folder ───
+      const files = await listFiles(folderId);
+      const added = [], updated = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        onProgress?.(i + 1, files.length, file.name);
+        const bookData = fileToBook(file);
+        const existing = Storage.getBook(file.id);
+        if (existing) {
+          Storage.updateBook(file.id, {
+            driveViewUrl:  bookData.driveViewUrl,
+            driveMimeType: bookData.driveMimeType,
+            coverUrl:      existing.coverUrl || bookData.coverUrl,
+          });
+          updated.push(file.name);
+        } else {
+          Storage.addBook(bookData);
+          added.push(file.name);
+        }
+      }
+
+      Storage.setSetting('lastSyncDate', new Date().toISOString());
+      return { added, updated, total: files.length };
+    }
   }
 
   /* ── Pick Folder ─────────────────────────────────────── */
