@@ -87,13 +87,14 @@
 
 <div id="toast"></div>
 <script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/utils.js"></script>
 <script>
+  if (!Auth.requireAuth()) throw new Error('auth');
   Utils.initTheme();
   Storage.initMockData();
 
-  const name = Storage.getSetting('userName') || '';
-  document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase() || '📚';
+  Auth.renderAvatar(document.getElementById('userAvatar'));
 
   let allAuthors = [];
 

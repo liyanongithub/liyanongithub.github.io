@@ -3,60 +3,23 @@
    ============================================================ */
 
 const GDrive = (() => {
-  let accessToken = null;
-  let tokenClient = null;
-
-  const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
   const FILES_API = 'https://www.googleapis.com/drive/v3/files';
 
-  /* ── Initialize GIS ──────────────────────────────────── */
-  function init(clientId) {
-    if (!clientId) return Promise.reject('Missing Google Client ID');
-    if (!window.google?.accounts?.oauth2) {
-      return Promise.reject('Google Identity Services not loaded');
-    }
-
-    return new Promise((resolve, reject) => {
-      tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: SCOPES,
-        callback: (resp) => {
-          if (resp.error) { reject(resp); return; }
-          accessToken = resp.access_token;
-          resolve(accessToken);
-        },
-        error_callback: reject,
-      });
-      resolve(null); // init successful, token not yet obtained
-    });
+  /* Auth is handled centrally by auth.js — use Auth.getToken() */
+  function getToken() {
+    return (typeof Auth !== 'undefined' ? Auth.getToken() : null);
   }
 
-  /* ── Request Access Token ────────────────────────────── */
-  function requestToken() {
-    return new Promise((resolve, reject) => {
-      if (!tokenClient) { reject('GDrive not initialized'); return; }
-      tokenClient.callback = (resp) => {
-        if (resp.error) { reject(resp); return; }
-        accessToken = resp.access_token;
-        resolve(accessToken);
-      };
-      tokenClient.requestAccessToken({ prompt: '' });
-    });
-  }
+  function isAuthorized() { return !!getToken(); }
 
-  function isAuthorized() {
-    return !!accessToken;
-  }
-
-  function signOut() {
-    if (accessToken && window.google?.accounts?.oauth2) {
-      window.google.accounts.oauth2.revoke(accessToken);
-    }
-    accessToken = null;
-  }
+  /* No-ops kept for backward compat */
+  function init()         { return Promise.resolve(); }
+  function requestToken() { return Promise.resolve(getToken()); }
+  function signOut()      { if (typeof Auth !== 'undefined') Auth.logout(); }
 
   /* ── List Files in Folder ────────────────────────────── */
   async function listFiles(folderId) {
+    const accessToken = getToken();
     if (!accessToken) throw new Error('Not authorized');
 
     const bookMimeTypes = [
@@ -84,7 +47,7 @@ const GDrive = (() => {
     });
 
     if (!resp.ok) {
-      if (resp.status === 401) { accessToken = null; }
+      if (resp.status === 401) { Storage.clearAuth(); }
       throw new Error(`Drive API error: ${resp.status}`);
     }
 
@@ -173,6 +136,7 @@ const GDrive = (() => {
   /* ── Pick Folder ─────────────────────────────────────── */
   function openFolderPicker(apiKey) {
     return new Promise((resolve, reject) => {
+      const accessToken = getToken();
       if (!accessToken) { reject('Not authorized'); return; }
 
       // Load Google Picker API

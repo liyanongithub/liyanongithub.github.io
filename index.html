@@ -407,8 +407,10 @@
 <div id="toast"></div>
 
 <script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/utils.js"></script>
 <script>
+  if (!Auth.requireAuth()) throw new Error('auth');
   // ── Init ────────────────────────────────────────────────
   Storage.initMockData();
   Utils.initTheme();
@@ -647,19 +649,12 @@
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
   });
 
-  // ── User avatar ─────────────────────────────────────────
-  function updateAvatar() {
-    const name = Storage.getSetting('userName') || '';
-    const initial = name.charAt(0).toUpperCase() || '📚';
-    document.getElementById('userAvatar').textContent = initial;
-  }
-
   // ── Init ─────────────────────────────────────────────────
   renderFilters();
   renderShelves();
   renderCurrentlyReading();
   randomGreeting();
-  updateAvatar();
+  Auth.renderAvatar(document.getElementById('userAvatar'));
 
   // Apply saved theme
   const savedTheme = Storage.getSetting('readingMode') || 'normal';

@@ -8,6 +8,7 @@ const Storage = (() => {
     books:     'ndl.books',
     records:   'ndl.records',
     chat:      'ndl.chat',
+    auth:      'ndl.auth',
   };
 
   /* ── Settings ────────────────────────────────────────── */
@@ -358,11 +359,20 @@ const Storage = (() => {
     saveRecords(mockRecords);
   }
 
+  /* ── Auth ────────────────────────────────────────────── */
+  function getAuth() {
+    try { return JSON.parse(localStorage.getItem(KEYS.auth) || 'null'); }
+    catch { return null; }
+  }
+  function saveAuth(data) { localStorage.setItem(KEYS.auth, JSON.stringify(data)); }
+  function clearAuth()    { localStorage.removeItem(KEYS.auth); }
+
   return {
     getSettings, saveSettings, getSetting, setSetting,
     getBooks, getBook, addBook, updateBook, deleteBook,
     getRecords, getRecord, saveRecord,
     getChatHistory, addChatMessage, clearChatHistory,
+    getAuth, saveAuth, clearAuth,
     getStats, exportData, importData, clearAllData,
     initMockData,
   };

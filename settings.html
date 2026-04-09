@@ -242,12 +242,20 @@
         <!-- Settings Panels -->
         <div>
 
-          <!-- Profile -->
+          <!-- Google Account -->
           <div class="settings-section" id="profile">
-            <h3>個人資料</h3>
-            <p class="desc">設定您的姓名，這會顯示在頭像和聊天室中。</p>
+            <h3>Google 帳號</h3>
+            <p class="desc">目前登入的帳號及圖書館相關設定。</p>
+            <div id="googleAccountCard" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--body-bg);border-radius:10px;border:1px solid var(--sidebar-border);margin-bottom:20px">
+              <div id="settingsAvatarWrap" style="width:46px;height:46px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--accent-light)"></div>
+              <div style="flex:1;min-width:0">
+                <div id="googleAccountName" style="font-weight:600;font-size:0.9rem;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+                <div id="googleAccountEmail" style="font-size:0.76rem;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+              </div>
+              <button class="btn btn-ghost" onclick="Auth.logout()" style="flex-shrink:0;font-size:0.78rem">登出</button>
+            </div>
             <div class="form-group">
-              <label class="form-label">您的名字</label>
+              <label class="form-label">顯示名稱（聊天室使用）</label>
               <input type="text" id="userName" class="form-input" placeholder="請輸入名字">
             </div>
             <button class="btn btn-primary" onclick="saveProfile()">儲存</button>
@@ -386,9 +394,11 @@
 <div id="toast"></div>
 
 <script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/gdrive.js"></script>
 <script>
+  if (!Auth.requireAuth()) throw new Error('auth');
   Utils.initTheme();
 
   // Load saved values
@@ -401,8 +411,15 @@
   document.getElementById('googleClientId').value     = s.googleClientId || '';
   document.getElementById('googleFolderId').value     = s.googleDriveFolderId || '';
 
-  const name = s.userName || '';
-  document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase() || '📚';
+  Auth.renderAvatar(document.getElementById('userAvatar'));
+
+  // Populate Google account card
+  const googleUser = Auth.getUser();
+  if (googleUser) {
+    Auth.renderAvatar(document.getElementById('settingsAvatarWrap'));
+    document.getElementById('googleAccountName').textContent  = googleUser.name  || '';
+    document.getElementById('googleAccountEmail').textContent = googleUser.email || '';
+  }
 
   // Apply theme selection
   const currentTheme = s.readingMode || 'normal';
@@ -465,16 +482,10 @@
   };
 
   window.syncDrive = async function() {
-    const clientId = document.getElementById('googleClientId').value.trim();
-    if (!clientId) { Utils.showToast('請先填入 Google Client ID'); return; }
-
-    // Ensure GIS loaded
-    if (!window.google?.accounts?.oauth2) {
-      Utils.showToast('正在載入 Google 服務…');
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      document.head.appendChild(script);
-      await new Promise(r => script.onload = r);
+    if (!Auth.getToken()) {
+      Utils.showToast('請先用 Google 帳號登入');
+      Auth.logout();
+      return;
     }
 
     const syncBtn = document.getElementById('syncBtn');
@@ -484,11 +495,6 @@
     try {
       syncBtn.disabled = true;
       statusEl.style.display = 'flex';
-      statusTextEl.textContent = '正在連接 Google Drive…';
-
-      await GDrive.init(clientId);
-      await GDrive.requestToken();
-
       statusTextEl.textContent = '正在同步書本…';
 
       const folderId = document.getElementById('googleFolderId').value.trim();

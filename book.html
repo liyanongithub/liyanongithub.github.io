@@ -404,8 +404,10 @@
 <div id="toast"></div>
 
 <script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/utils.js"></script>
 <script>
+  if (!Auth.requireAuth()) throw new Error('auth');
   Utils.initTheme();
 
   const params = new URLSearchParams(location.search);
@@ -425,8 +427,7 @@
     render();
 
     // Update avatar
-    const name = Storage.getSetting('userName') || '';
-    document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase() || '📚';
+    Auth.renderAvatar(document.getElementById('userAvatar'));
   }
 
   function render() {
